@@ -4,8 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.Gson
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.UpdatesListener
+import com.pengrad.telegrambot.model.request.InlineKeyboardButton
+import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.model.request.ParseMode
+import com.pengrad.telegrambot.request.AnswerCallbackQuery
 import com.pengrad.telegrambot.request.SendMessage
+import org.example.kufar.utils.PeriodicTimer
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -16,13 +20,16 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 import kotlin.concurrent.thread
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 var TELEGRAM_TOKEN = ""
 var CHAT_ID = 0L
 var KUFAR_TOKEN = ""
 var timer: PeriodicTimer? = null
+
+var lastFirstValue = 0
+var lastSecondValue = 0
+
 val LOGGER = LoggerFactory.getLogger("Kufar")
 
 @SpringBootApplication
@@ -51,25 +58,36 @@ fun main(args: Array<String>) {
     bot.setUpdatesListener { updates ->
         updates.forEach { update ->
             val message = update.message()
+            val callbackQuery = update.callbackQuery()
+
+            if (callbackQuery != null) {
+                when (callbackQuery.data()) {
+                    "/start" -> {
+                        start(CHAT_ID, bot)
+                    }
+
+                    "/stop" -> {
+                        stop(CHAT_ID, bot)
+                    }
+
+                    "/kufar" -> {
+                        getKufarData(CHAT_ID, bot, true)
+                    }
+                }
+
+                bot.execute(AnswerCallbackQuery(callbackQuery.id()))
+            }
+
             if (message != null) {
                 val chatId = message.chat().id()
 
                 val text = message.text()
                 if (text == "/start") {
-                    timer?.start()
-                    val response = SendMessage(chatId, "Hello! I'm Kufar search bot\n Start scheduler")
-                    bot.execute(response)
-
-                    LOGGER.info("start schedule bot")
+                    start(chatId, bot)
                 } else if (text == "/kufar") {
                     getKufarData(chatId, bot, true)
-                    LOGGER.info("/kufar")
                 } else if (text == "/stop") {
-                    timer?.stop()
-                    val response = SendMessage(chatId, "Stop scheduler")
-                    bot.execute(response)
-
-                    LOGGER.info("stop schedule")
+                    stop(chatId, bot)
                 } else if (text.startsWith("/timer", ignoreCase = true)) {
                     val parts = text.split(" ")
 
@@ -93,6 +111,14 @@ fun main(args: Array<String>) {
                         bot.execute(SendMessage(chatId, "Schedule set to 10 minutes"))
                     }
 
+                } else if (text == "/test") {
+                    val inlineKeyboard = InlineKeyboardMarkup(
+                        InlineKeyboardButton("start").callbackData("/start"),
+                        InlineKeyboardButton("kufar").callbackData("/kufar"),
+                        InlineKeyboardButton("stop").callbackData("/stop")
+                    )
+
+                    bot.execute(SendMessage(chatId, "select command").replyMarkup(inlineKeyboard))
                 } else {
                     val response = SendMessage(chatId, "Sorry, I don't understand that command.")
                     bot.execute(response)
@@ -106,8 +132,26 @@ fun main(args: Array<String>) {
     Thread.currentThread().join()
 }
 
+private fun stop(chatId: Long?, bot: TelegramBot) {
+    timer?.stop()
+    val response = SendMessage(chatId, "Stop scheduler")
+    bot.execute(response)
+
+    LOGGER.info("stop schedule")
+}
+
+private fun start(chatId: Long?, bot: TelegramBot) {
+    timer?.start()
+    val response = SendMessage(chatId, "Hello! I'm Kufar search bot\n Start scheduler")
+    bot.execute(response)
+
+    LOGGER.info("start schedule bot")
+}
+
 fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
     try {
+        LOGGER.info("get kufar data")
+
         val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches?limit=100")
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
@@ -124,21 +168,28 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
             val inputReader = BufferedReader(InputStreamReader(connection.inputStream))
             val jsonString = inputReader.use { it.readText() }
             val gson = Gson()
-            val person = gson.fromJson(jsonString, Person::class.java)
-            LOGGER.info(person.toString())
+            val data = gson.fromJson(jsonString, Data::class.java)
+            LOGGER.info(data.toString())
 
-            val new = person.items[0].counters.new
-            val new2 = person.items[1].counters.new
+            val new = data.items[0].counters.new
+            val new2 = data.items[1].counters.new
 
-            if ((new != 0 || new2 != 0) || force) {
-                val message = "New under 630 rub.: $new\n" +
-                        "[link](https://re.kufar.by/l/vitebsk/snyat/kvartiru-dolgosrochno?cur=BYR&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prc=r%3A0%2C63000&prn=1000&r_pageType=saved_search&size=30&sort=lst.d)\n\n" +
-                        "New total: $new2\n" +
-                        "[total link](https://re.kufar.by/listings?ar=18&cat=1010&cur=USD&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prn=1000&rgn=6&rnt=1&size=30&sort=lst.d&typ=let&r_pageType=saved_search)"
+            if ((lastFirstValue != new || lastSecondValue != new2) || force) {
+                if ((new != 0 || new2 != 0) || force) {
+                    val inlineKeyboard = InlineKeyboardMarkup(
+                        InlineKeyboardButton("link").url("https://re.kufar.by/l/vitebsk/snyat/kvartiru-dolgosrochno?cur=BYR&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prc=r%3A0%2C63000&prn=1000&r_pageType=saved_search&size=30&sort=lst.d"),
+                        InlineKeyboardButton("total link").url("https://re.kufar.by/listings?ar=18&cat=1010&cur=USD&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prn=1000&rgn=6&rnt=1&size=30&sort=lst.d&typ=let&r_pageType=saved_search")
+                    )
 
-                val response = SendMessage(chatId, message).parseMode(ParseMode.Markdown)
-                bot.execute(response)
-                LOGGER.info("Send: $message")
+                    val message = "New under 630 rub.: $new\n" +
+                            "New total: $new2"
+
+                    val response =
+                        SendMessage(chatId, message).parseMode(ParseMode.Markdown).replyMarkup(inlineKeyboard)
+
+                    bot.execute(response)
+                    LOGGER.info("Send: $message")
+                }
             } else {
                 LOGGER.info("Nothing to send")
             }
@@ -151,35 +202,8 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
     }
 }
 
-data class Person(@JsonProperty("items") val items: List<Item>) {
+data class Data(@JsonProperty("items") val items: List<Item>) {
     data class Item(@JsonProperty("id") val id: String, @JsonProperty("counters") val counters: Counters)
 
     data class Counters(@JsonProperty("new") val new: Int)
-}
-
-class PeriodicTimer(private val period: Duration, private val bot: TelegramBot) {
-    private var isRunning = false
-    private var thread: Thread? = null
-
-    fun start() {
-        if (!isRunning) {
-            isRunning = true
-            thread = Thread {
-                while (isRunning) {
-                    onTimerTick()
-                    Thread.sleep(period.inWholeMilliseconds)
-                }
-            }
-            thread?.start()
-        }
-    }
-
-    fun stop() {
-        isRunning = false
-        thread?.interrupt()
-    }
-
-    private fun onTimerTick() {
-        getKufarData(CHAT_ID, bot)
-    }
 }
