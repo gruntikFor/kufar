@@ -73,6 +73,13 @@ fun main(args: Array<String>) {
                     "/kufar" -> {
                         getKufarData(CHAT_ID, bot, true)
                     }
+
+                    "/view" -> {
+                        view1(CHAT_ID, bot)
+                        view2(CHAT_ID, bot)
+
+                        bot.execute(SendMessage(CHAT_ID, "Ads watched"))
+                    }
                 }
 
                 bot.execute(AnswerCallbackQuery(callbackQuery.id()))
@@ -84,11 +91,14 @@ fun main(args: Array<String>) {
                 val text = message.text()
                 if (text == "/start") {
                     start(chatId, bot)
+
                 } else if (text == "/kufar") {
                     getKufarData(chatId, bot, true)
+
                 } else if (text == "/stop") {
                     stop(chatId, bot)
-                } else if (text.startsWith("/timer", ignoreCase = true)) {
+
+                } else if (text.startsWith("/timer")) {
                     val parts = text.split(" ")
 
                     if (parts.size == 2) {
@@ -110,15 +120,19 @@ fun main(args: Array<String>) {
 
                         bot.execute(SendMessage(chatId, "Schedule set to 10 minutes"))
                     }
-
                 } else if (text == "/test") {
                     val inlineKeyboard = InlineKeyboardMarkup(
                         InlineKeyboardButton("start").callbackData("/start"),
                         InlineKeyboardButton("kufar").callbackData("/kufar"),
-                        InlineKeyboardButton("stop").callbackData("/stop")
+                        InlineKeyboardButton("stop").callbackData("/stop"),
+                        InlineKeyboardButton("view").callbackData("/view")
                     )
 
                     bot.execute(SendMessage(chatId, "select command").replyMarkup(inlineKeyboard))
+                } else if (text == "/view1") {
+                    view1(chatId, bot)
+                } else if (text == "/view2") {
+                    view2(chatId, bot)
                 } else {
                     val response = SendMessage(chatId, "Sorry, I don't understand that command.")
                     bot.execute(response)
@@ -167,8 +181,7 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
         if (responseCode == HttpURLConnection.HTTP_OK) {
             val inputReader = BufferedReader(InputStreamReader(connection.inputStream))
             val jsonString = inputReader.use { it.readText() }
-            val gson = Gson()
-            val data = gson.fromJson(jsonString, Data::class.java)
+            val data = Gson().fromJson(jsonString, Data::class.java)
             LOGGER.info(data.toString())
 
             val new = data.items[0].counters.new
@@ -176,9 +189,13 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
 
             if ((lastFirstValue != new || lastSecondValue != new2) || force) {
                 if ((new != 0 || new2 != 0) || force) {
+                    lastFirstValue = new
+                    lastSecondValue = new2
+
                     val inlineKeyboard = InlineKeyboardMarkup(
                         InlineKeyboardButton("link").url("https://re.kufar.by/l/vitebsk/snyat/kvartiru-dolgosrochno?cur=BYR&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prc=r%3A0%2C63000&prn=1000&r_pageType=saved_search&size=30&sort=lst.d"),
-                        InlineKeyboardButton("total link").url("https://re.kufar.by/listings?ar=18&cat=1010&cur=USD&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prn=1000&rgn=6&rnt=1&size=30&sort=lst.d&typ=let&r_pageType=saved_search")
+                        InlineKeyboardButton("total link").url("https://re.kufar.by/listings?ar=18&cat=1010&cur=USD&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prn=1000&rgn=6&rnt=1&size=30&sort=lst.d&typ=let&r_pageType=saved_search"),
+                        InlineKeyboardButton("link").callbackData("/view")
                     )
 
                     val message = "New under 630 rub.: $new\n" +
@@ -199,6 +216,36 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
         }
     } catch (e: Exception) {
         e.printStackTrace()
+    }
+}
+
+fun view1(chatId: Long, bot: TelegramBot) {
+    val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches/2008074.20240801185141.946/views")
+    val connection = url.openConnection() as HttpURLConnection
+    connection.requestMethod = "POST"
+
+    connection.setRequestProperty(
+        "Authorization",
+        "Bearer $KUFAR_TOKEN"
+    )
+
+    if (connection.responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
+        bot.execute(SendMessage(chatId, "view 1 it's fail"))
+    }
+}
+
+fun view2(chatId: Long, bot: TelegramBot) {
+    val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches/2008074.20240731111856.466/views")
+    val connection = url.openConnection() as HttpURLConnection
+    connection.requestMethod = "POST"
+
+    connection.setRequestProperty(
+        "Authorization",
+        "Bearer $KUFAR_TOKEN"
+    )
+
+    if (connection.responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
+        bot.execute(SendMessage(chatId, "view 2 it's fail"))
     }
 }
 
