@@ -1,14 +1,15 @@
 package org.example.kufar
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.Gson
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.UpdatesListener
+import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.model.request.ParseMode
 import com.pengrad.telegrambot.request.AnswerCallbackQuery
 import com.pengrad.telegrambot.request.SendMessage
+import org.example.kufar.model.Data
 import org.example.kufar.utils.PeriodicTimer
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -35,6 +36,34 @@ val LOGGER = LoggerFactory.getLogger("Kufar")
 @SpringBootApplication
 class KufarApplication
 
+fun wholeCallBack(callbackQuery: CallbackQuery?, bot: TelegramBot) {
+    if (callbackQuery != null) {
+        when (callbackQuery.data()) {
+            "/start" -> {
+                start(CHAT_ID, bot)
+            }
+
+            "/stop" -> {
+                stop(CHAT_ID, bot)
+            }
+
+            "/kufar" -> {
+                getKufarData(CHAT_ID, bot, true)
+            }
+
+            "/view" -> {
+                view1(CHAT_ID, bot)
+                view2(CHAT_ID, bot)
+
+                bot.execute(SendMessage(CHAT_ID, "Ads watched"))
+                LOGGER.info("Ads watched")
+            }
+        }
+
+        bot.execute(AnswerCallbackQuery(callbackQuery.id()))
+    }
+}
+
 fun main(args: Array<String>) {
     runApplication<KufarApplication>(*args)
 
@@ -47,7 +76,7 @@ fun main(args: Array<String>) {
     KUFAR_TOKEN = properties["kufar.token"].toString()
 
     val bot = TelegramBot(TELEGRAM_TOKEN)
-    timer = PeriodicTimer(10.minutes, bot)
+    timer = PeriodicTimer(5.minutes, bot)
 
     thread {
         timer?.start()
@@ -58,37 +87,12 @@ fun main(args: Array<String>) {
     bot.setUpdatesListener { updates ->
         updates.forEach { update ->
             val message = update.message()
-            val callbackQuery = update.callbackQuery()
-
-            if (callbackQuery != null) {
-                when (callbackQuery.data()) {
-                    "/start" -> {
-                        start(CHAT_ID, bot)
-                    }
-
-                    "/stop" -> {
-                        stop(CHAT_ID, bot)
-                    }
-
-                    "/kufar" -> {
-                        getKufarData(CHAT_ID, bot, true)
-                    }
-
-                    "/view" -> {
-                        view1(CHAT_ID, bot)
-                        view2(CHAT_ID, bot)
-
-                        bot.execute(SendMessage(CHAT_ID, "Ads watched"))
-                    }
-                }
-
-                bot.execute(AnswerCallbackQuery(callbackQuery.id()))
-            }
+            wholeCallBack(update.callbackQuery(), bot)
 
             if (message != null) {
-                val chatId = message.chat().id()
-
+                val chatId = message.chat().id() //maybe replace with CHAT_ID
                 val text = message.text()
+
                 if (text == "/start") {
                     start(chatId, bot)
 
@@ -99,40 +103,26 @@ fun main(args: Array<String>) {
                     stop(chatId, bot)
 
                 } else if (text.startsWith("/timer")) {
-                    val parts = text.split(" ")
+                    timer(chatId, bot, text)
 
-                    if (parts.size == 2) {
-                        try {
-                            val num1 = parts[1].toInt()
+                } else if (text == "/fast") {
+                    timer(chatId, bot, "/timer 2")
 
-                            timer?.stop()
-                            timer = PeriodicTimer(num1.minutes, bot)
-                            timer?.start()
+                } else if (text == "/slow") {
+                    timer(chatId, bot, "/timer 5")
 
-                            bot.execute(SendMessage(chatId, "Schedule set to $num1 minutes"))
-                        } catch (e: NumberFormatException) {
-                            bot.execute(SendMessage(chatId, "Please enter a number"))
-                        }
-                    } else {
-                        timer?.stop()
-                        timer = PeriodicTimer(10.minutes, bot)
-                        timer?.start()
+                } else if (text == "/sleep") {
+                    timer(chatId, bot, "/timer 240")
 
-                        bot.execute(SendMessage(chatId, "Schedule set to 10 minutes"))
-                    }
                 } else if (text == "/test") {
-                    val inlineKeyboard = InlineKeyboardMarkup(
-                        InlineKeyboardButton("start").callbackData("/start"),
-                        InlineKeyboardButton("kufar").callbackData("/kufar"),
-                        InlineKeyboardButton("stop").callbackData("/stop"),
-                        InlineKeyboardButton("view").callbackData("/view")
-                    )
+                    test(chatId, bot)
 
-                    bot.execute(SendMessage(chatId, "select command").replyMarkup(inlineKeyboard))
                 } else if (text == "/view1") {
                     view1(chatId, bot)
+
                 } else if (text == "/view2") {
                     view2(chatId, bot)
+
                 } else {
                     val response = SendMessage(chatId, "Sorry, I don't understand that command.")
                     bot.execute(response)
@@ -146,6 +136,14 @@ fun main(args: Array<String>) {
     Thread.currentThread().join()
 }
 
+private fun start(chatId: Long?, bot: TelegramBot) {
+    timer?.start()
+    val response = SendMessage(chatId, "Hello! I'm Kufar search bot\n Start scheduler")
+    bot.execute(response)
+
+    LOGGER.info("start schedule bot")
+}
+
 private fun stop(chatId: Long?, bot: TelegramBot) {
     timer?.stop()
     val response = SendMessage(chatId, "Stop scheduler")
@@ -154,12 +152,28 @@ private fun stop(chatId: Long?, bot: TelegramBot) {
     LOGGER.info("stop schedule")
 }
 
-private fun start(chatId: Long?, bot: TelegramBot) {
-    timer?.start()
-    val response = SendMessage(chatId, "Hello! I'm Kufar search bot\n Start scheduler")
-    bot.execute(response)
+private fun timer(chatId: Long?, bot: TelegramBot, text: String) {
+    val parts = text.split(" ")
 
-    LOGGER.info("start schedule bot")
+    if (parts.size == 2) {
+        try {
+            val num1 = parts[1].toInt()
+
+            timer?.stop()
+            timer = PeriodicTimer(num1.minutes, bot)
+            timer?.start()
+
+            bot.execute(SendMessage(chatId, "Schedule set to $num1 minutes"))
+        } catch (e: NumberFormatException) {
+            bot.execute(SendMessage(chatId, "Please enter a number"))
+        }
+    } else {
+        timer?.stop()
+        timer = PeriodicTimer(5.minutes, bot)
+        timer?.start()
+
+        bot.execute(SendMessage(chatId, "Schedule set to 5 minutes"))
+    }
 }
 
 fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
@@ -195,7 +209,7 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                     val inlineKeyboard = InlineKeyboardMarkup(
                         InlineKeyboardButton("link").url("https://re.kufar.by/l/vitebsk/snyat/kvartiru-dolgosrochno?cur=BYR&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prc=r%3A0%2C63000&prn=1000&r_pageType=saved_search&size=30&sort=lst.d"),
                         InlineKeyboardButton("total link").url("https://re.kufar.by/listings?ar=18&cat=1010&cur=USD&gtsy=country-belarus~province-vitebskaja_oblast~area-vitebsk~locality-vitebsk&prn=1000&rgn=6&rnt=1&size=30&sort=lst.d&typ=let&r_pageType=saved_search"),
-                        InlineKeyboardButton("link").callbackData("/view")
+                        InlineKeyboardButton("view").callbackData("/view")
                     )
 
                     val message = "New under 630 rub.: $new\n" +
@@ -217,6 +231,17 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
     } catch (e: Exception) {
         e.printStackTrace()
     }
+}
+
+fun test(chatId: Long, bot: TelegramBot) {
+    val inlineKeyboard = InlineKeyboardMarkup(
+        InlineKeyboardButton("start").callbackData("/start"),
+        InlineKeyboardButton("kufar").callbackData("/kufar"),
+        InlineKeyboardButton("stop").callbackData("/stop"),
+        InlineKeyboardButton("view").callbackData("/view")
+    )
+
+    bot.execute(SendMessage(chatId, "select command").replyMarkup(inlineKeyboard))
 }
 
 fun view1(chatId: Long, bot: TelegramBot) {
@@ -247,10 +272,4 @@ fun view2(chatId: Long, bot: TelegramBot) {
     if (connection.responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
         bot.execute(SendMessage(chatId, "view 2 it's fail"))
     }
-}
-
-data class Data(@JsonProperty("items") val items: List<Item>) {
-    data class Item(@JsonProperty("id") val id: String, @JsonProperty("counters") val counters: Counters)
-
-    data class Counters(@JsonProperty("new") val new: Int)
 }
