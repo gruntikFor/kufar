@@ -2,7 +2,10 @@ package org.example.kufar.utils
 
 import com.pengrad.telegrambot.TelegramBot
 import org.example.kufar.CHAT_ID
-import org.example.kufar.getKufarData
+import org.example.kufar.LOGGER
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.time.Duration
 
 class PeriodicTimer(private val period: Duration, private val bot: TelegramBot) {
@@ -28,6 +31,17 @@ class PeriodicTimer(private val period: Duration, private val bot: TelegramBot) 
     }
 
     private fun onTimerTick() {
-        getKufarData(CHAT_ID, bot)
+        val dateTimePlus3 = getCurrentDataTime()
+
+        if (dateTimePlus3.hour in 7..23) {
+            getKufarData(CHAT_ID, bot)
+        } else {
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            LOGGER.info("I'm sleeping: ${dateTimePlus3.format(formatter)}")
+        }
+    }
+
+    private fun getCurrentDataTime(): ZonedDateTime {
+        return ZonedDateTime.now(ZoneOffset.ofHours(3))
     }
 }
