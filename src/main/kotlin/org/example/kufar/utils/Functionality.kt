@@ -58,8 +58,6 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                         InlineKeyboardButton("view").callbackData("/view"),
                     )
 
-//                    val menuKeyboard = ReplyKeyboardMarkup(KeyboardButton("/view"))
-
                     val message = "New under 630 rub.: $new\n" +
                             "New total: $new2"
 
@@ -80,7 +78,7 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                 LOGGER.info("Nothing to send")
             }
         } else {
-            val response = SendMessage(chatId, "Sorry, I couldn't retrieve the weather data.")
+            val response = SendMessage(chatId, "Sorry, I couldn't retrieve the Kufar data.")
             bot.execute(response)
         }
     } catch (e: Exception) {
@@ -137,11 +135,7 @@ fun view1(chatId: Long, bot: TelegramBot) {
     val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches/2008074.20240801185141.946/views")
     val connection = url.openConnection() as HttpURLConnection
     connection.requestMethod = "POST"
-
-    connection.setRequestProperty(
-        "Authorization",
-        "Bearer $KUFAR_TOKEN"
-    )
+    connection.setRequestProperty(header.first, header.second)
 
     if (connection.responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
         bot.execute(SendMessage(chatId, "view 1 it's fail"))
@@ -152,11 +146,7 @@ fun view2(chatId: Long, bot: TelegramBot) {
     val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches/2008074.20240731111856.466/views")
     val connection = url.openConnection() as HttpURLConnection
     connection.requestMethod = "POST"
-
-    connection.setRequestProperty(
-        "Authorization",
-        "Bearer $KUFAR_TOKEN"
-    )
+    connection.setRequestProperty(header.first, header.second)
 
     if (connection.responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
         bot.execute(SendMessage(chatId, "view 2 it's fail"))

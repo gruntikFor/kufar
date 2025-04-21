@@ -41,7 +41,6 @@ fun commandsCallBack(message: Message?, bot: TelegramBot) {
 
         } else if (text == "/view") {
             viewAll(chatId, bot)
-
         } else {
             val response = SendMessage(chatId, "Sorry, I don't understand that command.")
             bot.execute(response)
