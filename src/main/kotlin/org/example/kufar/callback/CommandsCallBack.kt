@@ -1,8 +1,9 @@
-package org.example.kufar.utils
+package org.example.kufar.callback
 
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.request.SendMessage
+import org.example.kufar.service.*
 
 fun commandsCallBack(message: Message?, bot: TelegramBot) {
     if (message != null) {

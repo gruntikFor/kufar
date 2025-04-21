@@ -1,8 +1,9 @@
-package org.example.kufar.utils
+package org.example.kufar.timer
 
 import com.pengrad.telegrambot.TelegramBot
-import org.example.kufar.CHAT_ID
 import org.example.kufar.LOGGER
+import org.example.kufar.configuration.CHAT_ID
+import org.example.kufar.service.getKufarData
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
