@@ -1,9 +1,14 @@
 package org.example.kufar.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
+data class Data(val items: List<Item>) {
 
-data class Data(@JsonProperty("items") val items: List<Item>) {
-    data class Item(@JsonProperty("id") val id: String, @JsonProperty("counters") val counters: Counters)
+    data class Item(val id: String, val auto_names: Title, val counters: Counters)
+    data class Counters(val new: Int)
+    data class Title(val ru: String) {
+        private val upRu: String get() = ru.uppercase()
 
-    data class Counters(@JsonProperty("new") val new: Int)
+        override fun toString(): String {
+            return "Title(ru='$upRu')"
+        }
+    }
 }

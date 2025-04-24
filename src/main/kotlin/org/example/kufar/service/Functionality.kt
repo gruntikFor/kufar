@@ -5,11 +5,9 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.SendMessage
 import org.example.kufar.*
-import org.example.kufar.configuration.KUFAR_TOKEN
-import org.example.kufar.configuration.VIEW_FIRST_URL
-import org.example.kufar.configuration.VIEW_SECOND_URL
-import org.example.kufar.configuration.periodicTimer
+import org.example.kufar.configuration.*
 import org.example.kufar.timer.PeriodicTimer
+import org.example.kufar.utils.simpleGet
 import org.example.kufar.utils.simplePost
 import java.net.HttpURLConnection
 import java.net.URL
@@ -94,4 +92,14 @@ fun view2(chatId: Long, bot: TelegramBot) {
     if (connection.responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
         bot.execute(SendMessage(chatId, "view 2 it's fail"))
     }
+}
+
+fun favorite(chatId: Long, bot: TelegramBot) {
+    val responseCode1 = simpleGet(SAVED_SEARCH_URL, header)
+
+    bot.execute(SendMessage(chatId, responseCode1.toString()))
+
+//    if (!listOf(responseCode1, responseCode2).contains(HttpURLConnection.HTTP_NO_CONTENT)) {
+//        bot.execute(SendMessage(chatId, "view all it's fail"))
+//    }
 }
