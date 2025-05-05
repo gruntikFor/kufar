@@ -17,4 +17,5 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ..
+            cd ../home/kufar
+            mkdir hello-igor
