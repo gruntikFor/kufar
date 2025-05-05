@@ -19,6 +19,3 @@ jobs:
           script: |
             cd ../home/git/kufar
             git pull
-            ./gradlew build
-            cd ./build/libs
-            nohup java -jar kufar-0.0.1-SNAPSHOT.jar > kufarV7.log 2>&1 &
