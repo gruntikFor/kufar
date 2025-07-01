@@ -1,6 +1,9 @@
 package org.example.kufar
 
+import jakarta.annotation.PreDestroy
 import org.example.kufar.configuration.Configuration
+import org.example.kufar.db.destroyMongoConnection
+import org.example.kufar.db.initMongoClient
 import org.example.kufar.runner.Runner
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,6 +20,15 @@ class KufarApplication @Autowired constructor(val configuration: Configuration, 
     override fun run(vararg args: String) {
         configuration.init()
         runner.run()
+    }
+
+    init {
+        initMongoClient()
+    }
+
+    @PreDestroy
+    fun preDestroy() {
+        destroyMongoConnection()
     }
 }
 

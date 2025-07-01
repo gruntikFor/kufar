@@ -4,13 +4,17 @@ import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.SendMessage
+import org.bson.Document
 import org.example.kufar.*
 import org.example.kufar.configuration.*
+import org.example.kufar.db.find
+import org.example.kufar.db.insert
 import org.example.kufar.timer.PeriodicTimer
 import org.example.kufar.utils.simpleGet
 import org.example.kufar.utils.simplePost
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Date
 import kotlin.time.Duration.Companion.minutes
 
 val header = Pair("Authorization", "Bearer $KUFAR_TOKEN")
@@ -95,11 +99,29 @@ fun view2(chatId: Long, bot: TelegramBot) {
 }
 
 fun favorite(chatId: Long, bot: TelegramBot) {
-    val responseCode1 = simpleGet(SAVED_SEARCH_URL, header)
+    val responseData = simpleGet(SAVED_SEARCH_URL, header)
 
-    bot.execute(SendMessage(chatId, responseCode1.toString()))
+    val formattedDate = responseData.items.map { it ->
+        "id: " + it.id + " " + it.auto_names.ru + " Count:" + it.counters.new
+    }
+        .toList()
+        .joinToString(separator = "\n\n")
 
-//    if (!listOf(responseCode1, responseCode2).contains(HttpURLConnection.HTTP_NO_CONTENT)) {
-//        bot.execute(SendMessage(chatId, "view all it's fail"))
-//    }
+    bot.execute(SendMessage(chatId, formattedDate))
+
+    val document = Document("name", "Igor")
+        .append("msg", "hello from Mongo Igor")
+        .append("date", Date())
+
+    insert(document)
+
+    val find = find()
+    var lines = ""
+
+    for (line in find) {
+        println(line)
+        lines += line
+    }
+
+    bot.execute(SendMessage(chatId, lines))
 }
