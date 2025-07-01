@@ -12,10 +12,6 @@ private val COLLECTION_NAME = "test"
 var client: MongoClient? = null
 var collections: MongoCollection<Document>? = null
 
-fun getMongoClient(): MongoClient {
-    return MongoClients.create(URL)
-}
-
 fun initMongoClient() {
     println("initMongoClient()")
     if (client == null) {

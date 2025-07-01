@@ -65,7 +65,7 @@ fun timer(chatId: Long?, bot: TelegramBot, text: String) {
             periodicTimer?.start()
 
             bot.execute(SendMessage(chatId, "Schedule set to $num1 minutes"))
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             bot.execute(SendMessage(chatId, "Please enter a number"))
         }
     } else {
