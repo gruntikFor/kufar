@@ -3,7 +3,9 @@ package org.example.kufar.service
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
+import com.pengrad.telegrambot.model.request.InputPollOption
 import com.pengrad.telegrambot.request.SendMessage
+import com.pengrad.telegrambot.request.SendPoll
 import org.bson.Document
 import org.example.kufar.*
 import org.example.kufar.configuration.*
@@ -123,5 +125,22 @@ fun favorite(chatId: Long, bot: TelegramBot) {
         lines += line
     }
 
+    val inputPollOption1 = InputPollOption("q11")
+    val inputPollOption2 = InputPollOption("q12")
+    val inputPollOption3 = InputPollOption("q13")
+
     bot.execute(SendMessage(chatId, lines))
+
+    val execute = bot.execute(
+        SendPoll(
+            chatId,
+            "how are you doing?",
+            inputPollOption1, inputPollOption2, inputPollOption3
+        )
+            .isAnonymous(false)
+    )
+
+    if (!execute.isOk) {
+        System.err.println("Ошибка при отправке опроса: ${execute.errorCode()} ${execute.description()}")
+    }
 }
