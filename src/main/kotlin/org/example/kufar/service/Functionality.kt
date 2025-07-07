@@ -9,8 +9,7 @@ import com.pengrad.telegrambot.request.SendPoll
 import org.bson.Document
 import org.example.kufar.*
 import org.example.kufar.configuration.*
-import org.example.kufar.db.find
-import org.example.kufar.db.insert
+import org.example.kufar.db.insertOrUpdate
 import org.example.kufar.timer.PeriodicTimer
 import org.example.kufar.utils.simpleGet
 import org.example.kufar.utils.simplePost
@@ -102,42 +101,36 @@ fun view2(chatId: Long, bot: TelegramBot) {
 
 fun favorite(chatId: Long, bot: TelegramBot) {
     val responseData = simpleGet(SAVED_SEARCH_URL, header)
+    val names = responseData.items.map { it -> it.auto_names.ru }
 
-    val formattedDate = responseData.items.map { it ->
-        "id: " + it.id + " " + it.auto_names.ru + " Count:" + it.counters.new
-    }
-        .toList()
-        .joinToString(separator = "\n\n")
-
-    bot.execute(SendMessage(chatId, formattedDate))
-
-    val document = Document("name", "Igor")
-        .append("msg", "hello from Mongo Igor")
-        .append("date", Date())
-
-    insert(document)
-
-    val find = find()
-    var lines = ""
-
-    for (line in find) {
-        println(line)
-        lines += line
+    val documents = responseData.items.map { it ->
+        Document("chat_id", chatId.toString())
+            .append("product_id", it.id)
+            .append("title", it.auto_names.ru)
+            .append("query", it.query)
+            .append("show", false)
+            .append("date", Date())
     }
 
-    val inputPollOption1 = InputPollOption("q11")
-    val inputPollOption2 = InputPollOption("q12")
-    val inputPollOption3 = InputPollOption("q13")
+    insertOrUpdate(documents)
 
-    bot.execute(SendMessage(chatId, lines))
+//
+//    val find = find()
+//    var lines = ""
+//
+//    for (line in find) {
+//        println(line)
+//        lines += line
+//    }
+
+    val toList = names.map { line -> InputPollOption(line) }.toList()
 
     val execute = bot.execute(
         SendPoll(
             chatId,
-            "how are you doing?",
-            inputPollOption1, inputPollOption2, inputPollOption3
-        )
-            .isAnonymous(false)
+            "Выберите продукты для отслеживания",
+            *toList.toTypedArray(),
+        ).isAnonymous(false)
     )
 
     if (!execute.isOk) {

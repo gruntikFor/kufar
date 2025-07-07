@@ -6,9 +6,9 @@ import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import org.bson.Document
 
-private val URL = "mongodb://myuser:mypassword@localhost:27017"
-private val DB_NAME = "kufar"
-private val COLLECTION_NAME = "test"
+private const val URL = "mongodb://myuser:mypassword@localhost:27017"
+private const val DB_NAME = "kufar"
+private const val COLLECTION_NAME = "test"
 var client: MongoClient? = null
 var collections: MongoCollection<Document>? = null
 
@@ -31,6 +31,10 @@ fun destroyMongoConnection() {
 
 fun insert(document: Document) {
     getMongoCollection()?.insertOne(document)
+}
+
+fun insertMany(documents: List<Document>) {
+    getMongoCollection()?.insertMany(documents)
 }
 
 fun find(): FindIterable<Document?> {
