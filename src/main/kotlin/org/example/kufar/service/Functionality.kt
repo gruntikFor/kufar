@@ -7,7 +7,7 @@ import com.pengrad.telegrambot.model.request.InputPollOption
 import com.pengrad.telegrambot.request.SendMessage
 import com.pengrad.telegrambot.request.SendPoll
 import org.bson.Document
-import org.example.kufar.*
+import org.example.kufar.LOGGER
 import org.example.kufar.configuration.*
 import org.example.kufar.db.insertOrUpdate
 import org.example.kufar.timer.PeriodicTimer
@@ -15,7 +15,7 @@ import org.example.kufar.utils.simpleGet
 import org.example.kufar.utils.simplePost
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.Date
+import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
 val header = Pair("Authorization", "Bearer $KUFAR_TOKEN")
@@ -103,18 +103,22 @@ fun favorite(chatId: Long, bot: TelegramBot) {
     val responseData = simpleGet(SAVED_SEARCH_URL, header)
     val names = responseData.items.map { it -> it.auto_names.ru }
 
-    val documents = responseData.items.map { it ->
-        Document("chat_id", chatId.toString())
-            .append("product_id", it.id)
-            .append("title", it.auto_names.ru)
-            .append("query", it.query)
-            .append("show", false)
-            .append("date", Date())
+    val documents = mutableListOf<Document>()
+
+    for ((index, it) in responseData.items.withIndex()) {
+        documents.add(
+            Document("chat_id", chatId.toString())
+                .append("product_id", it.id)
+                .append("title", it.auto_names.ru)
+                .append("query", it.query)
+                .append("show", false)
+                .append("index", index)
+                .append("date", Date())
+        )
     }
 
     insertOrUpdate(documents)
 
-//
 //    val find = find()
 //    var lines = ""
 //

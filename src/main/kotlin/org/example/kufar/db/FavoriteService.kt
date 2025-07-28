@@ -4,11 +4,11 @@ import com.mongodb.client.model.Filters.eq
 import org.bson.Document
 
 fun insertOrUpdate(document: Document) {
-    val filter = eq("product_id", document.get("product_id"))
     val collection = getMongoCollection()
+    val filter = eq("product_id", document.get("product_id"))
     val find = collection?.find(filter)
 
-    if (find == null) {
+    if (find?.first() == null) {
         println("inserted: " + document["product_id"])
         collection?.insertOne(document)
     } else {
