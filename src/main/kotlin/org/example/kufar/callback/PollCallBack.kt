@@ -5,6 +5,8 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Updates
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.PollAnswer
+ import org.example.kufar.configuration.DEFAULT_ITEM_URL
+import org.example.kufar.configuration.TEST_URL
 import org.example.kufar.db.collections
 import org.example.kufar.db.getMongoCollection
 
@@ -32,6 +34,8 @@ fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
         if (find?.first() != null) {
             val set = Updates.set("show", true)
             collections?.updateOne(filter, set)
+            val query = find.first()?.get("query")
+            TEST_URL = DEFAULT_ITEM_URL + query.toString()
         }
     }
 }

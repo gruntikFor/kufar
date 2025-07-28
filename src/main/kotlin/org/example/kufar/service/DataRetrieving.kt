@@ -41,6 +41,7 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                     lastSecondValue = new2
 
                     val inlineKeyboard = InlineKeyboardMarkup(
+                        InlineKeyboardButton("test").url(TEST_URL),
                         InlineKeyboardButton("link").url(UNDER_630_URL),
                         InlineKeyboardButton("total link").url(TOTAL_URL),
                         InlineKeyboardButton("view").callbackData("/view"),
