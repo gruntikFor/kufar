@@ -1,11 +1,12 @@
 package org.example.kufar.configuration
 
+import org.example.kufar.db.DBData
 import org.example.kufar.timer.PeriodicTimer
 import org.springframework.stereotype.Component
 import java.io.FileInputStream
 import java.util.*
 
-const val DEFAULT_ITEM_URL="https://www.kufar.by/listings?"
+const val DEFAULT_ITEM_URL = "https://www.kufar.by/listings?"
 
 var TELEGRAM_TOKEN = ""
 var CHAT_ID = 0L
@@ -16,6 +17,8 @@ var SAVED_SEARCH_URL = ""
 var UNDER_630_URL = ""
 var TEST_URL = ""
 var TOTAL_URL = ""
+var URLS = mutableListOf<String>()
+var ITEMS = mutableListOf<DBData>()
 
 var periodicTimer: PeriodicTimer? = null
 

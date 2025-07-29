@@ -41,14 +41,16 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                     lastSecondValue = new2
 
                     val inlineKeyboard = InlineKeyboardMarkup(
-                        InlineKeyboardButton("test").url(TEST_URL),
+//                        InlineKeyboardButton("test").url(TEST_URL),
                         InlineKeyboardButton("link").url(UNDER_630_URL),
                         InlineKeyboardButton("total link").url(TOTAL_URL),
                         InlineKeyboardButton("view").callbackData("/view"),
                     )
 
-                    val message = "New under 630 rub.: $new\n" +
-                            "New total: $new2"
+                    val message ="""
+                        New under 630 rub.: $new
+                        New total: $new2
+                    """.trimIndent()
 
                     val response = SendMessage(chatId, message)
                         .parseMode(ParseMode.Markdown)

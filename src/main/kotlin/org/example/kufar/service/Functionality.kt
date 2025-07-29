@@ -134,7 +134,9 @@ fun favorite(chatId: Long, bot: TelegramBot) {
             chatId,
             "Выберите продукты для отслеживания",
             *toList.toTypedArray(),
-        ).isAnonymous(false)
+        )
+            .allowsMultipleAnswers(true)
+            .isAnonymous(false)
     )
 
     if (!execute.isOk) {
