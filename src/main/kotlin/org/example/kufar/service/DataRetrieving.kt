@@ -8,6 +8,7 @@ import com.pengrad.telegrambot.model.request.ParseMode
 import com.pengrad.telegrambot.request.SendMessage
 import org.example.kufar.*
 import org.example.kufar.configuration.*
+import org.example.kufar.model.ConvertedData
 import org.example.kufar.model.Data
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -32,39 +33,59 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
             val data = Gson().fromJson(jsonString, Data::class.java)
             LOGGER.info(data.toString())
 
-            val new = data.items[0].counters.new
-            val new2 = data.items[1].counters.new
+//            val new = data.items[0].counters.new
+//            val new2 = data.items[1].counters.new
 
-            if ((lastFirstValue != new || lastSecondValue != new2) || force) {
-                if ((new != 0 || new2 != 0) || force) {
-                    lastFirstValue = new
-                    lastSecondValue = new2
+            //start simplify
 
-                    val inlineKeyboard = InlineKeyboardMarkup(
-//                        InlineKeyboardButton("test").url(TEST_URL),
-                        InlineKeyboardButton("link").url(UNDER_630_URL),
-                        InlineKeyboardButton("total link").url(TOTAL_URL),
-                        InlineKeyboardButton("view").callbackData("/view"),
-                    )
+            val existedItems = ITEMS.map { it -> it.product_id }.toList()
+            val toMap = ITEMS.associateBy { it.product_id }
 
-                    val message ="""
-                        New under 630 rub.: $new
-                        New total: $new2
-                    """.trimIndent()
+            data.items.stream()
+                .filter { existedItems.contains(it.id) }
+                .forEach { it -> toMap[it.id]?.count = it.counters.new }
 
-                    val response = SendMessage(chatId, message)
-                        .parseMode(ParseMode.Markdown)
-                        .replyMarkup(inlineKeyboard)
+            val existedValues = data.items.map { it -> it.id }.toList()
 
-                    bot.execute(response)
-                    LOGGER.info("Send: $message")
+            val filteredItems = ITEMS.filter { it ->
+                existedValues.contains(it.product_id)
+            }.map { it ->
+                val count = toMap[it.product_id]?.count ?: 0
+                ConvertedData(it.product_id, it.title, it.query, count)
+            }.toList()
 
-                    viewAll(CHAT_ID, bot)
-                    LOGGER.info("View all ads")
+            //end simplify
 
-                    lastFirstValue = 0
-                    lastSecondValue = 0
-                }
+            val message = filteredItems.mapIndexed { index, it ->
+                (index + 1).toString() + ". " + it.title + ": " + it.count
+            }.toList().joinToString("\n")
+
+            println(message)
+
+//            if ((lastFirstValue != new || lastSecondValue != new2) || force) {
+//                if ((new != 0 || new2 != 0) || force) {
+//                    lastFirstValue = new
+//                    lastSecondValue = new2
+
+            if (true) {
+                val inlineKeyboards = filteredItems.mapIndexed { index, item ->
+                    InlineKeyboardButton((index + 1).toString()).url(item.query)
+                }.toList()
+
+                val inlineKeyboardMarkup = InlineKeyboardMarkup(*inlineKeyboards.toTypedArray())
+
+                val response = SendMessage(chatId, message)
+                    .parseMode(ParseMode.Markdown)
+                    .replyMarkup(inlineKeyboardMarkup)
+
+                bot.execute(response)
+                LOGGER.info("Send: $message")
+
+                viewAll(CHAT_ID, bot)
+                LOGGER.info("View all ads")
+
+                lastFirstValue = 0
+                lastSecondValue = 0
             } else {
                 LOGGER.info("Nothing to send")
             }

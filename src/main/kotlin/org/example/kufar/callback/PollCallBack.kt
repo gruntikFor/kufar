@@ -19,13 +19,9 @@ fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
     if (pollAnswer != null) {
         pollAnswer.user().id()
         val chatId = pollAnswer.user().id() //maybe replace with CHAT_ID
-//        val pollId = pollAnswer.pollId()
         val options = pollAnswer.optionIds()
         options.toList().toTypedArray()
 //        println("chatid: $chatId")
-//        println("poll: $pollId")
-//        println("options:")
-//        println(options.toList().toString())
 
         val mongoCollection = getMongoCollection()
 
@@ -43,8 +39,11 @@ fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
             collections?.updateMany(filter, set)
 
             it.forEach { value ->
-                URLS.add(value["query"].toString()) //todo del
-                ITEMS.add(Gson().fromJson(value.toJson(), DBData::class.java))
+                val data = Gson().fromJson(value.toJson(), DBData::class.java)
+                    .apply { show = true }
+                    .apply { query = DEFAULT_ITEM_URL + query }
+
+                ITEMS.add(data)
             }
 
             //todo del

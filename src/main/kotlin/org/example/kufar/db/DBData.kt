@@ -4,7 +4,8 @@ data class DBData(
     val chat_id: String,
     val product_id: String,
     val title: String,
-    val query: String,
-    val show: Boolean,
-    val index: Int
+    var query: String,
+    var show: Boolean,
+    val index: Int,
+    var count: Int
 )
