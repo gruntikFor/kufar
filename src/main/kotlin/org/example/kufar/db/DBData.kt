@@ -5,6 +5,7 @@ data class DBData(
     val product_id: String,
     val title: String,
     var query: String,
+    var view_url: String,
     var show: Boolean,
     val index: Int,
     var count: Int

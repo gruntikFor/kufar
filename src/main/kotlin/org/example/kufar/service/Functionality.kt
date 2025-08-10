@@ -32,15 +32,16 @@ fun stop(chatId: Long?, bot: TelegramBot) {
     LOGGER.info("stop schedule")
 }
 
-//no work
-fun viewAll(chatId: Long, bot: TelegramBot) {
-    val responseCode1 = simplePost(VIEW_FIRST_URL, header)
-    val responseCode2 = simplePost(VIEW_SECOND_URL, header)
-
-    if (!listOf(responseCode1, responseCode2).contains(HttpURLConnection.HTTP_NO_CONTENT)) {
-        bot.execute(SendMessage(chatId, "view all it's fail"))
-    }
-}
+//fun viewAll(chatId: Long, bot: TelegramBot) {
+//    //items
+//
+//    val responseCode1 = simplePost(VIEW_FIRST_URL, header)
+//    val responseCode2 = simplePost(VIEW_SECOND_URL, header)
+//
+//    if (!listOf(responseCode1, responseCode2).contains(HttpURLConnection.HTTP_NO_CONTENT)) {
+//        bot.execute(SendMessage(chatId, "view all it's fail"))
+//    }
+//}
 
 fun test(chatId: Long, bot: TelegramBot) {
     val inlineKeyboard = InlineKeyboardMarkup(
@@ -77,9 +78,10 @@ fun timer(chatId: Long?, bot: TelegramBot, text: String) {
     }
 }
 
-//no work
 fun view1(chatId: Long, bot: TelegramBot) {
-    val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches/2008074.20240801185141.946/views")
+    if (ITEMS.isEmpty()) return
+
+    val url = URL(ITEMS[0].view_url)
     val connection = url.openConnection() as HttpURLConnection
     connection.requestMethod = "POST"
     connection.setRequestProperty(header.first, header.second)
@@ -89,9 +91,10 @@ fun view1(chatId: Long, bot: TelegramBot) {
     }
 }
 
-//no work
 fun view2(chatId: Long, bot: TelegramBot) {
-    val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches/2008074.20240731111856.466/views")
+    if (ITEMS.size < 2) return
+
+    val url = URL(ITEMS[1].view_url)
     val connection = url.openConnection() as HttpURLConnection
     connection.requestMethod = "POST"
     connection.setRequestProperty(header.first, header.second)
@@ -112,7 +115,8 @@ fun favorite(chatId: Long, bot: TelegramBot) {
             Document("chat_id", chatId.toString())
                 .append("product_id", it.id)
                 .append("title", it.auto_names.ru)
-                .append("query", it.query)
+                .append("query", calculateUrl(it.auto_names.ru, it.query))
+                .append("view_url", calculateViewUrl(it.id))
                 .append("show", false)
                 .append("index", index)
                 .append("date", Date())
@@ -136,4 +140,20 @@ fun favorite(chatId: Long, bot: TelegramBot) {
     if (!execute.isOk) {
         System.err.println("Ошибка при отправке опроса: ${execute.errorCode()} ${execute.description()}")
     }
+}
+
+fun calculateUrl(title: String, query: String): String {
+    return if (title.contains("Недвижимость")) {
+        DEFAULT_RENT_URL + query
+    } else {
+        DEFAULT_ITEM_URL + query
+    }
+}
+
+fun calculateViewUrl(productId: String): String {
+    val accountId = productId.split(".").let { it[0] }
+
+    return DEFAULT_VIEW_API_URL
+        .replace("{accountId}", accountId)
+        .replace("{productId}", productId)
 }
