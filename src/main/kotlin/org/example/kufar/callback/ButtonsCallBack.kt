@@ -24,7 +24,7 @@ fun buttonsCallBack(callbackQuery: CallbackQuery?, bot: TelegramBot) {
             }
 
             "/view" -> {
-                viewAll(CHAT_ID, bot)
+//                viewAll(CHAT_ID, bot)
 
                 bot.execute(SendMessage(CHAT_ID, "Ads watched"))
                 LOGGER.info("Ads watched")

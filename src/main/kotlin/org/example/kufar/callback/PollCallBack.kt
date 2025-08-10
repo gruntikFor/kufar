@@ -3,17 +3,16 @@ package org.example.kufar.callback
 import com.google.gson.Gson
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Sorts
 import com.mongodb.client.model.Updates
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.PollAnswer
-import com.pengrad.telegrambot.model.Update
 import org.example.kufar.configuration.DEFAULT_ITEM_URL
 import org.example.kufar.configuration.ITEMS
-import org.example.kufar.configuration.TEST_URL
-import org.example.kufar.configuration.URLS
 import org.example.kufar.db.DBData
 import org.example.kufar.db.collections
 import org.example.kufar.db.getMongoCollection
+import org.example.kufar.model.Data
 
 fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
     if (pollAnswer != null) {
@@ -21,7 +20,6 @@ fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
         val chatId = pollAnswer.user().id() //maybe replace with CHAT_ID
         val options = pollAnswer.optionIds()
         options.toList().toTypedArray()
-//        println("chatid: $chatId")
 
         val mongoCollection = getMongoCollection()
 
@@ -30,7 +28,7 @@ fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
             Filters.`in`("index", *options)
         )
 
-        val find = mongoCollection?.find(filter)
+        val find = mongoCollection?.find(filter)?.sort(Sorts.ascending("index"))
 
         find?.toList()?.let { it ->
             ITEMS.clear()
@@ -46,13 +44,7 @@ fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
                 ITEMS.add(data)
             }
 
-            //todo del
-            val query = find.first()?.get("query")
-            TEST_URL = DEFAULT_ITEM_URL + query.toString()
-
             print("selected items size: " + ITEMS.size)
-
-            //call banner
         }
     }
 }

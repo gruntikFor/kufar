@@ -14,10 +14,9 @@ var KUFAR_TOKEN = ""
 var VIEW_FIRST_URL = ""
 var VIEW_SECOND_URL = ""
 var SAVED_SEARCH_URL = ""
-var UNDER_630_URL = ""
-var TEST_URL = ""
-var TOTAL_URL = ""
-var URLS = mutableListOf<String>()
+//var UNDER_630_URL = ""
+//var TEST_URL = ""
+//var TOTAL_URL = ""
 var ITEMS = mutableListOf<DBData>()
 
 var periodicTimer: PeriodicTimer? = null
@@ -39,7 +38,7 @@ class Configuration {
         VIEW_FIRST_URL = properties["kufar.view.first.url"].toString()
         VIEW_SECOND_URL = properties["kufar.view.second.url"].toString()
         SAVED_SEARCH_URL = properties["kufar.saved-search.url"].toString()
-        UNDER_630_URL = properties["kufar.under.630.url"].toString()
-        TOTAL_URL = properties["kufar.total.url"].toString()
+//        UNDER_630_URL = properties["kufar.under.630.url"].toString()
+//        TOTAL_URL = properties["kufar.total.url"].toString()
     }
 }

@@ -32,6 +32,7 @@ fun stop(chatId: Long?, bot: TelegramBot) {
     LOGGER.info("stop schedule")
 }
 
+//no work
 fun viewAll(chatId: Long, bot: TelegramBot) {
     val responseCode1 = simplePost(VIEW_FIRST_URL, header)
     val responseCode2 = simplePost(VIEW_SECOND_URL, header)
@@ -76,7 +77,7 @@ fun timer(chatId: Long?, bot: TelegramBot, text: String) {
     }
 }
 
-//delete
+//no work
 fun view1(chatId: Long, bot: TelegramBot) {
     val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches/2008074.20240801185141.946/views")
     val connection = url.openConnection() as HttpURLConnection
@@ -88,6 +89,7 @@ fun view1(chatId: Long, bot: TelegramBot) {
     }
 }
 
+//no work
 fun view2(chatId: Long, bot: TelegramBot) {
     val url = URL("https://api.kufar.by/saved-search/v1/accounts/2008074/searches/2008074.20240731111856.466/views")
     val connection = url.openConnection() as HttpURLConnection
@@ -118,14 +120,6 @@ fun favorite(chatId: Long, bot: TelegramBot) {
     }
 
     insertOrUpdate(documents)
-
-//    val find = find()
-//    var lines = ""
-//
-//    for (line in find) {
-//        println(line)
-//        lines += line
-//    }
 
     val toList = names.map { line -> InputPollOption(line) }.toList()
 

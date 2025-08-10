@@ -1,6 +1,9 @@
 package org.example.kufar.service
 
 import com.google.gson.Gson
+import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Sorts
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
@@ -8,6 +11,8 @@ import com.pengrad.telegrambot.model.request.ParseMode
 import com.pengrad.telegrambot.request.SendMessage
 import org.example.kufar.*
 import org.example.kufar.configuration.*
+import org.example.kufar.db.DBData
+import org.example.kufar.db.getMongoCollection
 import org.example.kufar.model.ConvertedData
 import org.example.kufar.model.Data
 import java.io.BufferedReader
@@ -33,31 +38,15 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
             val data = Gson().fromJson(jsonString, Data::class.java)
             LOGGER.info(data.toString())
 
-//            val new = data.items[0].counters.new
-//            val new2 = data.items[1].counters.new
+            firstInitSelectedOptions(chatId)
 
-            //start simplify
+            val fetchedItems = data.items.associateBy { it.id }
+            val filteredItems = filterList(fetchedItems)
 
-            val existedItems = ITEMS.map { it -> it.product_id }.toList()
-            val toMap = ITEMS.associateBy { it.product_id }
-
-            data.items.stream()
-                .filter { existedItems.contains(it.id) }
-                .forEach { it -> toMap[it.id]?.count = it.counters.new }
-
-            val existedValues = data.items.map { it -> it.id }.toList()
-
-            val filteredItems = ITEMS.filter { it ->
-                existedValues.contains(it.product_id)
-            }.map { it ->
-                val count = toMap[it.product_id]?.count ?: 0
-                ConvertedData(it.product_id, it.title, it.query, count)
-            }.toList()
-
-            //end simplify
+            println(filteredItems)
 
             val message = filteredItems.mapIndexed { index, it ->
-                (index + 1).toString() + ". " + it.title + ": " + it.count
+                String.format("%d. %s: %s", index + 1, it.title, it.count)
             }.toList().joinToString("\n")
 
             println(message)
@@ -72,20 +61,18 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                     InlineKeyboardButton((index + 1).toString()).url(item.query)
                 }.toList()
 
-                val inlineKeyboardMarkup = InlineKeyboardMarkup(*inlineKeyboards.toTypedArray())
-
-                val response = SendMessage(chatId, message)
+                val request = SendMessage(chatId, message)
                     .parseMode(ParseMode.Markdown)
-                    .replyMarkup(inlineKeyboardMarkup)
+                    .replyMarkup(InlineKeyboardMarkup(*inlineKeyboards.toTypedArray()))
 
-                bot.execute(response)
+                bot.execute(request)
                 LOGGER.info("Send: $message")
 
-                viewAll(CHAT_ID, bot)
-                LOGGER.info("View all ads")
+//                viewAll(CHAT_ID, bot)
+//                LOGGER.info("View all ads")
 
-                lastFirstValue = 0
-                lastSecondValue = 0
+//                lastFirstValue = 0
+//                lastSecondValue = 0
             } else {
                 LOGGER.info("Nothing to send")
             }
@@ -95,5 +82,48 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
         }
     } catch (e: Exception) {
         e.printStackTrace()
+    }
+}
+
+fun filterList(fetchedItems:  Map<String, Data.Item>): MutableList<ConvertedData> {
+    val filteredItems = mutableListOf<ConvertedData>()
+
+    ITEMS.map { item ->
+        fetchedItems[item.product_id]?.let {
+            val newItems = fetchedItems[item.product_id]?.counters?.new ?: 0
+
+            filteredItems.add(
+                ConvertedData(
+                    item.product_id,
+                    item.title,
+                    item.query,
+                    newItems
+                )
+            )
+        }
+    }
+
+    return filteredItems
+}
+
+fun firstInitSelectedOptions(chatId: Long) {
+    if (ITEMS.isNotEmpty()) return
+
+    val mongoCollection = getMongoCollection()
+
+    val filter = Filters.and(
+        eq("chat_id", chatId.toString()),
+        eq("show", true)
+    )
+
+    val find = mongoCollection?.find(filter)?.sort(Sorts.ascending("index"))
+
+    find?.toList()?.let { it ->
+        it.forEach { value ->
+            val data = Gson().fromJson(value.toJson(), DBData::class.java)
+                .apply { query = DEFAULT_ITEM_URL + query }
+
+            ITEMS.add(data)
+        }
     }
 }
