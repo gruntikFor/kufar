@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Sorts
+import com.mongodb.client.model.Updates
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
@@ -44,20 +45,11 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
             val fetchedItems = data.items.associateBy { it.id }
             val filteredItems = filterList(fetchedItems)
 
-            println(filteredItems)
-
             val message = filteredItems.mapIndexed { index, it ->
                 String.format("%d. %s: %s", index + 1, it.title, it.count)
             }.toList().joinToString("\n")
 
-            println(message)
-
-//            if ((lastFirstValue != new || lastSecondValue != new2) || force) {
-//                if ((new != 0 || new2 != 0) || force) {
-//                    lastFirstValue = new
-//                    lastSecondValue = new2
-
-            if (true) {
+            if (force || needUpdate(filteredItems)) {
                 val inlineKeyboards = filteredItems.mapIndexed { index, item ->
                     InlineKeyboardButton((index + 1).toString()).url(item.query)
                 }.toMutableList()
@@ -71,9 +63,7 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                 bot.execute(request)
                 LOGGER.info("Send: $message")
 
-
-//                lastFirstValue = 0
-//                lastSecondValue = 0
+                updateNew(filteredItems)
             } else {
                 LOGGER.info("Nothing to send")
             }
@@ -84,27 +74,6 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
     } catch (e: Exception) {
         e.printStackTrace()
     }
-}
-
-fun filterList(fetchedItems:  Map<String, Data.Item>): MutableList<ConvertedData> {
-    val filteredItems = mutableListOf<ConvertedData>()
-
-    ITEMS.map { item ->
-        fetchedItems[item.product_id]?.let {
-            val newItems = fetchedItems[item.product_id]?.counters?.new ?: 0
-
-            filteredItems.add(
-                ConvertedData(
-                    item.product_id,
-                    item.title,
-                    item.query,
-                    newItems
-                )
-            )
-        }
-    }
-
-    return filteredItems
 }
 
 fun firstInitSelectedOptions(chatId: Long) {
@@ -125,5 +94,44 @@ fun firstInitSelectedOptions(chatId: Long) {
 
             ITEMS.add(data)
         }
+    }
+}
+
+fun filterList(fetchedItems: Map<String, Data.Item>): MutableList<ConvertedData> {
+    val filteredItems = mutableListOf<ConvertedData>()
+
+    ITEMS.map { item ->
+        fetchedItems[item.product_id]?.let {
+            val newItems = fetchedItems[item.product_id]?.counters?.new ?: 0
+
+            filteredItems.add(
+                ConvertedData(
+                    item.product_id,
+                    item.title,
+                    item.query,
+                    item.count,
+                    newItems,
+                )
+            )
+        }
+    }
+
+    return filteredItems
+}
+
+fun needUpdate(convertedData: List<ConvertedData>): Boolean {
+    return convertedData
+        .filter { it.oldCount != it.count }
+        .filter { it.count != 0 }
+        .toList()
+        .isNotEmpty()
+}
+
+fun updateNew(convertedData: List<ConvertedData>) {
+    convertedData.forEach {
+        getMongoCollection()?.updateOne(
+            eq("product_id", it.product_id),
+            Updates.set("count", it.count)
+        )
     }
 }
