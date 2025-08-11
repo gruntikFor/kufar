@@ -36,12 +36,6 @@ fun commandsCallBack(message: Message?, bot: TelegramBot) {
         } else if (text == "/test") {
             test(chatId, bot)
 
-        } else if (text == "/view1") {
-            view1(chatId, bot)
-
-        } else if (text == "/view2") {
-            view2(chatId, bot)
-
         } else if (text == "/view") {
             viewAll(chatId, bot)
         } else if (text == "/favorite") {

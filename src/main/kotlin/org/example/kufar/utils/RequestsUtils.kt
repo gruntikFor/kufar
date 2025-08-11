@@ -26,8 +26,6 @@ fun simpleGet(url: String, pair: Pair<String, String>): Data {
 
     val inputReader = BufferedReader(InputStreamReader(connection.inputStream))
     val jsonString = inputReader.use { it.readText() }
-//    println("log:")
-//    println(jsonString)
     val data = Gson().fromJson(jsonString, Data::class.java)
     LOGGER.info(data.toString())
 

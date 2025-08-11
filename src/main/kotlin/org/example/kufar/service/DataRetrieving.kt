@@ -60,7 +60,9 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
             if (true) {
                 val inlineKeyboards = filteredItems.mapIndexed { index, item ->
                     InlineKeyboardButton((index + 1).toString()).url(item.query)
-                }.toList()
+                }.toMutableList()
+
+                inlineKeyboards.add(InlineKeyboardButton("view").callbackData("/view"))
 
                 val request = SendMessage(chatId, message)
                     .parseMode(ParseMode.Markdown)
@@ -69,8 +71,6 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                 bot.execute(request)
                 LOGGER.info("Send: $message")
 
-//                viewAll(CHAT_ID, bot)
-//                LOGGER.info("View all ads")
 
 //                lastFirstValue = 0
 //                lastSecondValue = 0

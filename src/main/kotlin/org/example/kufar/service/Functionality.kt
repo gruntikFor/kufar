@@ -14,7 +14,6 @@ import org.example.kufar.timer.PeriodicTimer
 import org.example.kufar.utils.simpleGet
 import org.example.kufar.utils.simplePost
 import java.net.HttpURLConnection
-import java.net.URL
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
@@ -32,16 +31,17 @@ fun stop(chatId: Long?, bot: TelegramBot) {
     LOGGER.info("stop schedule")
 }
 
-//fun viewAll(chatId: Long, bot: TelegramBot) {
-//    //items
-//
-//    val responseCode1 = simplePost(VIEW_FIRST_URL, header)
-//    val responseCode2 = simplePost(VIEW_SECOND_URL, header)
-//
-//    if (!listOf(responseCode1, responseCode2).contains(HttpURLConnection.HTTP_NO_CONTENT)) {
-//        bot.execute(SendMessage(chatId, "view all it's fail"))
-//    }
-//}
+fun viewAll(chatId: Long, bot: TelegramBot) {
+    val responseCodes = ITEMS.map {
+        simplePost(it.view_url, header)
+    }.toList()
+
+    if (!responseCodes.contains(HttpURLConnection.HTTP_NO_CONTENT)) {
+        bot.execute(SendMessage(chatId, "View all it's fail!"))
+    } else {
+        bot.execute(SendMessage(chatId, "Ads watched"))
+    }
+}
 
 fun test(chatId: Long, bot: TelegramBot) {
     val inlineKeyboard = InlineKeyboardMarkup(
@@ -75,32 +75,6 @@ fun timer(chatId: Long?, bot: TelegramBot, text: String) {
         periodicTimer?.start()
 
         bot.execute(SendMessage(chatId, "Schedule set to 5 minutes"))
-    }
-}
-
-fun view1(chatId: Long, bot: TelegramBot) {
-    if (ITEMS.isEmpty()) return
-
-    val url = URL(ITEMS[0].view_url)
-    val connection = url.openConnection() as HttpURLConnection
-    connection.requestMethod = "POST"
-    connection.setRequestProperty(header.first, header.second)
-
-    if (connection.responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
-        bot.execute(SendMessage(chatId, "view 1 it's fail"))
-    }
-}
-
-fun view2(chatId: Long, bot: TelegramBot) {
-    if (ITEMS.size < 2) return
-
-    val url = URL(ITEMS[1].view_url)
-    val connection = url.openConnection() as HttpURLConnection
-    connection.requestMethod = "POST"
-    connection.setRequestProperty(header.first, header.second)
-
-    if (connection.responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
-        bot.execute(SendMessage(chatId, "view 2 it's fail"))
     }
 }
 
