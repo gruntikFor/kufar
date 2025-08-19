@@ -45,3 +45,12 @@ tasks.named('test') {
 tasks.named('test') {
     enabled = false
 }
+
+jar {
+    enabled = false
+}
+
+bootJar {
+    archiveBaseName.set("kufar")
+    archiveVersion = ''
+}
