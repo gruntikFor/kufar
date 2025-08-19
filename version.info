@@ -1,2 +1,2 @@
-version=v30
-changelog=updated jar name
+version=v31
+changelog=added copyJar task

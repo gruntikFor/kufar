@@ -53,4 +53,14 @@ jar {
 bootJar {
     archiveBaseName.set("kufar")
     archiveVersion = ''
+
+    copy {
+        from file('service.properties')
+        into file('build/libs')
+    }
+}
+
+tasks.register('copyJar', Copy){
+    from file('build/libs/kufar.jar')
+    into project.rootDir
 }
