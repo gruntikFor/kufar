@@ -18,3 +18,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/git/kufar
+            git pull origin master
+            kill $(ps aux | grep 'kufar.jar' | awk '{print $2}')
+            ./gradlew build
+            ./gradlew copyJar
+            nohup java -jar kufar.jar > kufarV.log 2>&1 &
