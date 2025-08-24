@@ -10,6 +10,7 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.model.request.ParseMode
 import com.pengrad.telegrambot.request.SendMessage
+import org.apache.commons.logging.Log
 import org.example.kufar.LOGGER
 import org.example.kufar.configuration.ITEMS
 import org.example.kufar.configuration.SAVED_SEARCH_URL
@@ -43,7 +44,13 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
             firstInitSelectedOptions(chatId)
 
             val fetchedItems = data.items.associateBy { it.id }
+            LOGGER.info("__fetched items")
+            LOGGER.info(fetchedItems.toString())
+
             val filteredItems = filterList(fetchedItems)
+
+            LOGGER.info("___filtered items")
+            LOGGER.info(filteredItems.toString())
 
             val message = filteredItems.mapIndexed { index, it ->
                 String.format("%d. %s: %s", index + 1, it.title, it.count)
