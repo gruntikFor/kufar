@@ -17,7 +17,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            kill $(ps aux | grep 'kufar.jar' | awk '{print $2}') 2>/dev/null
+            sleep 5 && pkill -f 'kufar.jar'
             cd /home/git/kufar
             git pull origin master
             ./gradlew build
