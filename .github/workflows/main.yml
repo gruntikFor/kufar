@@ -17,9 +17,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sleep 5 && pkill -f 'kufar.jar'
             cd /home/git/kufar
             git pull origin master
+            sleep 5 && pkill -f 'kufar.jar'
             ./gradlew build
             ./gradlew copyJar
             nohup java -jar kufar.jar > kufarV.log 2>&1 &
