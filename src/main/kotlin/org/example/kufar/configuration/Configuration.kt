@@ -15,11 +15,9 @@ var CHAT_ID = 0L
 var KUFAR_TOKEN = ""
 var SAVED_SEARCH_URL = ""
 var ITEMS = mutableListOf<DBData>()
+var FIRST_INIT = false
 
 var periodicTimer: PeriodicTimer? = null
-
-//var lastFirstValue = 0
-//var lastSecondValue = 0
 
 @Component
 class Configuration {

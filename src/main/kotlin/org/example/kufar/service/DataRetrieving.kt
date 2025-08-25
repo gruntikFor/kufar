@@ -10,9 +10,9 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.model.request.ParseMode
 import com.pengrad.telegrambot.request.SendMessage
-import org.apache.commons.logging.Log
 import org.example.kufar.LOGGER
 import org.example.kufar.configuration.ITEMS
+import org.example.kufar.configuration.FIRST_INIT
 import org.example.kufar.configuration.SAVED_SEARCH_URL
 import org.example.kufar.db.DBData
 import org.example.kufar.db.getMongoCollection
@@ -27,6 +27,8 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
     try {
         LOGGER.info("get kufar data")
 
+        firstInitSelectedOptions(chatId)
+
         val url = URL(SAVED_SEARCH_URL)
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
@@ -40,8 +42,6 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
             val jsonString = inputReader.use { it.readText() }
             val data = Gson().fromJson(jsonString, Data::class.java)
             LOGGER.info(data.toString())
-
-            firstInitSelectedOptions(chatId)
 
             val fetchedItems = data.items.associateBy { it.id }
             LOGGER.info("__fetched items")
@@ -68,7 +68,7 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                     .replyMarkup(InlineKeyboardMarkup(*inlineKeyboards.toTypedArray()))
 
                 bot.execute(request)
-                LOGGER.info("Send: $message")
+                LOGGER.info("Send\n: $message")
 
                 updateNew(filteredItems)
             } else {
@@ -84,7 +84,9 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
 }
 
 fun firstInitSelectedOptions(chatId: Long) {
-    if (ITEMS.isNotEmpty()) return
+    if (FIRST_INIT) return
+
+    FIRST_INIT = true
 
     val mongoCollection = getMongoCollection()
 
