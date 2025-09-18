@@ -26,7 +26,7 @@ class Runner {
         periodicTimer = PeriodicTimer(DEFAULT_TIMER, bot)
 
         insertOrUpdateTimer(
-            Document("chat_id", CHAT_ID)
+            Document("chat_id", CHAT_ID.toString())
                 .append("timer", DEFAULT_TIMER.inWholeMinutes.toString())
         )
 
