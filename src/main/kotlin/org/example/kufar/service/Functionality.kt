@@ -10,6 +10,7 @@ import org.bson.Document
 import org.example.kufar.LOGGER
 import org.example.kufar.configuration.*
 import org.example.kufar.db.insertOrUpdate
+import org.example.kufar.db.insertOrUpdateTimer
 import org.example.kufar.timer.PeriodicTimer
 import org.example.kufar.utils.simpleGet
 import org.example.kufar.utils.simplePost
@@ -65,16 +66,26 @@ fun timer(chatId: Long?, bot: TelegramBot, text: String) {
             periodicTimer = PeriodicTimer(num1.minutes, bot)
             periodicTimer?.start()
 
+            insertOrUpdateTimer(
+                Document("chat_id", chatId.toString())
+                .append("timer", num1.toString())
+            )
+
             bot.execute(SendMessage(chatId, "Schedule set to $num1 minutes"))
         } catch (_: NumberFormatException) {
             bot.execute(SendMessage(chatId, "Please enter a number"))
         }
     } else {
         periodicTimer?.stop()
-        periodicTimer = PeriodicTimer(2.minutes, bot)
+        periodicTimer = PeriodicTimer(DEFAULT_TIMER, bot)
         periodicTimer?.start()
 
-        bot.execute(SendMessage(chatId, "Schedule set to 5 minutes"))
+        insertOrUpdateTimer(
+            Document("chat_id", chatId.toString())
+                .append("timer", DEFAULT_TIMER.inWholeMinutes.toString())
+        )
+
+        bot.execute(SendMessage(chatId, "Schedule set to 30 minutes"))
     }
 }
 

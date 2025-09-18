@@ -41,16 +41,18 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
             val inputReader = BufferedReader(InputStreamReader(connection.inputStream))
             val jsonString = inputReader.use { it.readText() }
             val data = Gson().fromJson(jsonString, Data::class.java)
-            LOGGER.info(data.toString())
 
             val fetchedItems = data.items.associateBy { it.id }
             LOGGER.info("__fetched items")
-            LOGGER.info(fetchedItems.toString())
+
+            fetchedItems.forEach { println(it.key + " " + it.value) }
 
             val filteredItems = filterList(fetchedItems)
 
             LOGGER.info("___filtered items")
             LOGGER.info(filteredItems.toString())
+
+            filteredItems.forEach { println(it.title + " " + it.oldCount + " " + it.count) }
 
             val message = filteredItems.mapIndexed { index, it ->
                 String.format("%d. %s: %s", index + 1, it.title, it.count)
@@ -70,7 +72,16 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                 bot.execute(request)
                 LOGGER.info("Send\n: $message")
 
-                updateNew(filteredItems)
+                val newItemsCount = filteredItems.filter { it.count > 0 }.size
+
+                if (newItemsCount > 0) {
+                    filteredItems.forEach {
+                        it.count = 0
+                        it.oldCount = 0
+                    }
+                    viewAll(chatId, bot)
+                    updateNew(filteredItems)
+                }
             } else {
                 LOGGER.info("Nothing to send")
             }

@@ -7,10 +7,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.FileInputStream
 import java.util.*
+import kotlin.time.Duration.Companion.minutes
 
 const val DEFAULT_ITEM_URL = "https://www.kufar.by/listings?"
 const val DEFAULT_RENT_URL = "https://re.kufar.by/listings?"
 const val DEFAULT_VIEW_API_URL = "https://api.kufar.by/saved-search/v1/accounts/{accountId}/searches/{productId}/views"
+
+val DEFAULT_TIMER = 30.minutes
 
 var MONGO_DB_URL = ""
 var TELEGRAM_TOKEN = ""

@@ -9,8 +9,9 @@ import org.example.kufar.configuration.MONGO_DB_URL
 
 private const val DB_NAME = "kufar"
 private const val COLLECTION_NAME = "test"
+const val TIMER_COLLECTION_NAME = "timer"
 var client: MongoClient? = null
-var collections: MongoCollection<Document>? = null
+val collections: MutableMap<String, MongoCollection<Document>?> = hashMapOf()
 
 fun initMongoClient() {
     println("initMongoClient()")
@@ -19,12 +20,14 @@ fun initMongoClient() {
         client = MongoClients.create()
         client = MongoClients.create(MONGO_DB_URL)
         val database = client?.getDatabase(DB_NAME)
-        collections = database?.getCollection(COLLECTION_NAME)
+
+        collections.put(COLLECTION_NAME, database?.getCollection(COLLECTION_NAME))
+        collections.put(TIMER_COLLECTION_NAME, database?.getCollection(TIMER_COLLECTION_NAME))
     }
 }
 
-fun getMongoCollection(): MongoCollection<Document>? {
-    return collections
+fun getMongoCollection(name: String = COLLECTION_NAME): MongoCollection<Document>? {
+    return collections[name]
 }
 
 fun destroyMongoConnection() {
@@ -40,6 +43,6 @@ fun insertMany(documents: List<Document>) {
 }
 
 fun find(): FindIterable<Document?> {
-    collections?.let { return it.find() }
+    getMongoCollection()?.let { return it.find() }
     throw RuntimeException("Mongo Collection Not Found")
 }

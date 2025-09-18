@@ -29,7 +29,7 @@ fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
         find?.toList()?.let { it ->
             ITEMS.clear()
 
-            collections?.updateMany(filter, Updates.set("show", true))
+            getMongoCollection()?.updateMany(filter, Updates.set("show", true))
 
             it.forEach { value ->
                 val data = Gson().fromJson(value.toJson(), DBData::class.java)

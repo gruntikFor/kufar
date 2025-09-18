@@ -34,7 +34,7 @@ fun commandsCallBack(message: Message?, bot: TelegramBot) {
             timer(chatId, bot, "/timer 240")
 
         } else if (text == "/test") {
-            test(chatId, bot)
+//            test(chatId, bot)
 
         } else if (text == "/view") {
             viewAll(chatId, bot)
