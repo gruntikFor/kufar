@@ -11,8 +11,8 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.model.request.ParseMode
 import com.pengrad.telegrambot.request.SendMessage
 import org.example.kufar.LOGGER
+ import org.example.kufar.configuration.FIRST_INIT
 import org.example.kufar.configuration.ITEMS
-import org.example.kufar.configuration.FIRST_INIT
 import org.example.kufar.configuration.SAVED_SEARCH_URL
 import org.example.kufar.db.DBData
 import org.example.kufar.db.getMongoCollection
@@ -72,16 +72,17 @@ fun getKufarData(chatId: Long, bot: TelegramBot, force: Boolean = false) {
                 bot.execute(request)
                 LOGGER.info("Send\n: $message")
 
-                val newItemsCount = filteredItems.filter { it.count > 0 }.size
+                updateNew(filteredItems)
 
-                if (newItemsCount > 0) {
-                    filteredItems.forEach {
-                        it.count = 0
-                        it.oldCount = 0
-                    }
-                    viewAll(chatId, bot)
-                    updateNew(filteredItems)
-                }
+//                val newItemsCount = filteredItems.filter { it.count > 0 }.size
+
+//                if (newItemsCount > 0) {
+//                    filteredItems.forEach {
+//                        it.count = 0
+//                        it.oldCount = 0
+//                    }
+//                    viewAll(chatId, bot)
+//                }
             } else {
                 LOGGER.info("Nothing to send")
             }
