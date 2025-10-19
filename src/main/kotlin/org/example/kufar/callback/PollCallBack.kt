@@ -9,7 +9,6 @@ import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.PollAnswer
 import org.example.kufar.configuration.ITEMS
 import org.example.kufar.db.DBData
-import org.example.kufar.db.collections
 import org.example.kufar.db.getMongoCollection
 import org.example.kufar.service.getKufarData
 
@@ -41,6 +40,6 @@ fun pollCallBack(pollAnswer: PollAnswer?, bot: TelegramBot) {
             print("selected items size: " + ITEMS.size)
         }
 
-        getKufarData(chatId, bot)
+        getKufarData(chatId, bot, true)
     }
 }

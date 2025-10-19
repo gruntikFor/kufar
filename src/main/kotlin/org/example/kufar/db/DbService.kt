@@ -14,7 +14,7 @@ var client: MongoClient? = null
 val collections: MutableMap<String, MongoCollection<Document>?> = hashMapOf()
 
 fun initMongoClient() {
-    println("initMongoClient()")
+    println("initMongoClient")
 
     if (client == null) {
         client = MongoClients.create()

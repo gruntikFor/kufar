@@ -21,7 +21,7 @@ var CHAT_ID = 0L
 var KUFAR_TOKEN = ""
 var SAVED_SEARCH_URL = ""
 var ITEMS = mutableListOf<DBData>()
-var FIRST_INIT = false
+var FIRST_INIT = true
 
 var periodicTimer: PeriodicTimer? = null
 
@@ -36,7 +36,7 @@ class Configuration {
         val inputStream = FileInputStream("service.properties")
         properties.load(inputStream)
 
-        MONGO_DB_URL = url;
+        MONGO_DB_URL = url
         TELEGRAM_TOKEN = properties["telegram.bot.token"].toString()
         CHAT_ID = (properties["chat.id"] as String).toLong()
         KUFAR_TOKEN = properties["kufar.token"].toString()

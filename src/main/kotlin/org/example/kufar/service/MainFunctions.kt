@@ -12,8 +12,8 @@ import org.example.kufar.configuration.*
 import org.example.kufar.db.insertOrUpdate
 import org.example.kufar.db.insertOrUpdateTimer
 import org.example.kufar.timer.PeriodicTimer
-import org.example.kufar.utils.simpleGet
-import org.example.kufar.utils.simplePost
+import org.example.kufar.request.simpleGetWithCodeCheck
+import org.example.kufar.request.simplePost
 import java.net.HttpURLConnection
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
@@ -34,7 +34,7 @@ fun stop(chatId: Long?, bot: TelegramBot) {
 
 fun viewAll(chatId: Long, bot: TelegramBot) {
     val responseCodes = ITEMS.map {
-        simplePost(it.view_url, header)
+        simplePost(it.view_url)
     }.toList()
 
     if (!responseCodes.contains(HttpURLConnection.HTTP_NO_CONTENT)) {
@@ -68,7 +68,7 @@ fun timer(chatId: Long?, bot: TelegramBot, text: String) {
 
             insertOrUpdateTimer(
                 Document("chat_id", chatId.toString())
-                .append("timer", num1.toString())
+                    .append("timer", num1.toString())
             )
 
             bot.execute(SendMessage(chatId, "Schedule set to $num1 minutes"))
@@ -90,13 +90,11 @@ fun timer(chatId: Long?, bot: TelegramBot, text: String) {
 }
 
 fun favorite(chatId: Long, bot: TelegramBot) {
-    val responseData = simpleGet(SAVED_SEARCH_URL, header)
-    val names = responseData.items.map { it -> it.auto_names.ru }
+    val responseData = simpleGetWithCodeCheck(SAVED_SEARCH_URL, bot)
 
-    val documents = mutableListOf<Document>()
-
-    for ((index, it) in responseData.items.withIndex()) {
-        documents.add(
+    responseData?.let { data ->
+        val names = data.items.map { it -> it.auto_names.ru }
+        val documents = data.items.withIndex().map { (index, it) ->
             Document("chat_id", chatId.toString())
                 .append("product_id", it.id)
                 .append("title", it.auto_names.ru)
@@ -105,25 +103,25 @@ fun favorite(chatId: Long, bot: TelegramBot) {
                 .append("show", false)
                 .append("index", index)
                 .append("date", Date())
+        }
+
+        insertOrUpdate(documents)
+
+        val nameOptions = names.map { line -> InputPollOption(line) }.toList()
+
+        val execute = bot.execute(
+            SendPoll(
+                chatId,
+                "Выберите продукты для отслеживания",
+                *nameOptions.toTypedArray(),
+            )
+                .allowsMultipleAnswers(true)
+                .isAnonymous(false)
         )
-    }
 
-    insertOrUpdate(documents)
-
-    val toList = names.map { line -> InputPollOption(line) }.toList()
-
-    val execute = bot.execute(
-        SendPoll(
-            chatId,
-            "Выберите продукты для отслеживания",
-            *toList.toTypedArray(),
-        )
-            .allowsMultipleAnswers(true)
-            .isAnonymous(false)
-    )
-
-    if (!execute.isOk) {
-        System.err.println("Ошибка при отправке опроса: ${execute.errorCode()} ${execute.description()}")
+        if (!execute.isOk) {
+            System.err.println("Ошибка при отправке опроса: ${execute.errorCode()} ${execute.description()}")
+        }
     }
 }
 

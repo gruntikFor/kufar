@@ -14,7 +14,7 @@
         </encoder>
     </appender>
 
-    <logger name="org.mongodb.driver" level="ERROR"/>
+    <logger name="org.mongodb.driver" level="INFO"/>
 
     <!-- Настройка корневого логгера -->
     <root level="info">

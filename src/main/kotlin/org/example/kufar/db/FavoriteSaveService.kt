@@ -26,7 +26,7 @@ fun insertOrUpdateTimer(document: Document) {
         println("inserted timer to chat_id: " + document["chat_id"])
         collection?.insertOne(document)
     } else {
-        println("updated timer: " + document["chat_id"])
+        println("updated timer chat id: " + document["chat_id"])
         collection.updateOne(filter, Document("\$set", document))
     }
 }
