@@ -64,3 +64,8 @@ tasks.register('copyJar', Copy){
     from file('build/libs/kufar.jar')
     into project.rootDir
 }
+
+tasks.register('buildForDeploy') {
+    dependsOn build
+    finalizedBy copyJar
+}
