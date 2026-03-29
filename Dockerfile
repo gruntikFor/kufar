@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 RUN gradle build --no-daemon
 
-FROM openjdk:17-jdk-slim
+FROM amazoncorretto:17.0.18-al2023
 COPY --from=build /app/build/libs /app
 WORKDIR /app
 run chmod +x kufar.jar
